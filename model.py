@@ -3,6 +3,8 @@ import random
 
 # defininir los conjuntos
 
+# prueba
+
 # definir los parámetros
 
 # crear el modelo vacío (model = Model())
