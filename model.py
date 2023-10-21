@@ -17,38 +17,37 @@ transacciones = [352.6, 357.0075, 359.21125, 360.313125, 362.2965,
 380.89615, 381.24875, 395.573125] # ✅
 
 
-Cprod = {j: 8282.27 for j in Electrico} # ✅
-Cope_j = {j: 222.74 for j in Electrico} # ✅
+Cprod = 8282.27 # ✅
+Cope_j = 222.74 # ✅
 Cope_i = {i: 4968.13 if i <= 2150 else 1044.44 for i in Bencinero} # ✅
-Ccar = {j: 222.74 for j in Electrico} # ✅
+Ccar = 222.74 # ✅ 
 Cben = {i: 1183.91 if i <= 2150 else 1043.19 for i in Bencinero} # ✅
-Cmante = {j: 415.77 for j in Electrico} # ✅
+Cmante = 415.77 # ✅ 
 Cmantb = {i: 2142.7 if i <= 2150 else 376.5 for i in Bencinero} # ✅
 D = {t: transacciones[t] for t in Anos} # ✅
 Emax = {t: randint(1,10) for t in Anos} # ⚠️ pendiente
-Eprod = {j: 42 for j in Electrico} # ✅
+Eprod = 42 # ✅ 
 Ecar = {t: emisiones_carga[t] for t in Anos}
 Erb = {i: 131.54 if i <= 2150 else 157 for i in Bencinero} # ✅
-Pme = {j: 81 for j in Electrico} # ✅
+Pme = 81 # ✅ 
 Pmb = {i: 99 if i <= 2150 else 81 for i in Bencinero} # ✅
-P = 4000000 # pendiente, revisar la plata por km y pasajero ⚠️
+P_t = {t: 4000 for t in Anos} # pendiente, revisar la plata por km y pasajero ⚠️
 Pref = 0.823 # ✅
-V_j = {j: 15 for j in Electrico} # ✅
-V_i = {i: 10 for i in Bencinero} # ✅
+V_j = 15  # ✅ 
+V_i = 10 # ✅ 
 Vinicio_i = {i: randint(1, 5) if i <= 2150 else randint(4, 8) for i in Bencinero} # ✅
-print(Vinicio_i[1])
 Vinicio_j = {j: randint(1, 3) if j <= 750 else 0 for j in Electrico} # ✅
-M = 4 # ⚠️ CAMBIAR VALOR
+M = 400 # ⚠️ CAMBIAR VALOR
+
 # Parametros auxiliares
-# revisar
-CEprod = {j: Eprod[j] * Pref for j in Electrico} # ✅
+CEprod = Eprod * Pref # ✅
 CEcar = {t: Pref * Ecar[t] for t in Anos} # ✅
 CErb = {i: Erb[i] * Pref for i in Bencinero} # ✅
-Ctot = {j: Cprod[j] + CEprod[j] for j in Electrico} # ✅
-Ctu_j = {(j,t): Ccar[j] + Cope_j[j] + CEcar[t] + Cmante[j] for j in Electrico for t in Anos} # ✅
+Ctot = Cprod + CEprod # ✅
+Ctu_t = {t: Ccar + Cope_j + CEcar[t] + Cmante for t in Anos} # ✅
 Ctu_i = {i: Cben[i] + CErb[i] + Cope_i[i] + Cmantb[i] for i in Bencinero} # ✅
-
-
+Cna_i = {i: Cope_i[i] + Cben[i] + Cmantb[i] for i in Bencinero} # ✅
+Cna_j = (Cprod + Cope_j + Ccar + Cmante)
 
 # crear el modelo vacío (model = Model())
 
@@ -60,11 +59,12 @@ x = model.addVars(Bencinero, Anos, vtype = GRB.BINARY, name="x_it") # ✅
 y = model.addVars(Electrico, Anos, vtype = GRB.BINARY, name="y_jt") # ✅
 z = model.addVars(Bencinero, Anos, vtype = GRB.BINARY, name="z_it") # ✅
 w = model.addVars(Electrico, Anos, vtype = GRB.BINARY, name="w_jt") # ✅
+I = model.addVars(Anos, vtype = GRB.CONTINUOUS, name = "I_t")
 
 # variables auxiliares
 # sumatoria: quicksum(lo que está adentro de la sumatoria for i in Lo que sea)
-a = model.addVars(Bencinero, vtype= GRB.INTEGER, name = "a_i") # revisar ⚠️
-model.addConstrs((a[i] == quicksum(z[i, t] * t for t in Anos) for i in Bencinero), name="def_a") # revisar ⚠️
+a = model.addVars(Bencinero, vtype= GRB.INTEGER, name = "a_i") # ✅
+model.addConstrs((a[i] == quicksum(z[i, t] * t for t in Anos) for i in Bencinero), name="def_a") # ✅
 
 # llamar al update (model.update())
 model.update() # ✅
@@ -73,23 +73,15 @@ model.update() # ✅
 
 #1)
 model.addConstrs(((quicksum(x[i,t]*Pmb[i] for i in Bencinero)+ 
-                   (quicksum(y[j,t]*Pme[j] for j in Electrico))<= D[t]*M) for t in Anos) , name = "R1") # R1 demanda anual de pasajeros de buses ✅
+                   (quicksum(y[j,t]*Pme for j in Electrico))<= D[t]*M) for t in Anos) , name = "R1") # R1 demanda anual de pasajeros de buses ✅
 
 #2)
-#model.addConstrs(((quicksum(x[i,t]*(Cben[i]+Cope_i[i]+Cmantb[i]) for i in Bencinero) # revisar ⚠️
- #                  + (quicksum(y[j,t]*(Ccar[j]+Cope_j[j]+Cmante) for j in Electrico
-  #                  + (quicksum(w[j,t]*Cprod[j]) for j in Electrico))) <= P) for t in Anos), name = "R2") # R2 Los costos totales no pueden sobrepasar el presupuesto anual. ✅
-
-model.addConstrs(((quicksum(x[i, t] * (Cben[i] + Cope_i[i] + Cmantb[i]) for i in Bencinero) #REVISAR, CORREGI CON CHATGPT PERO NOSE SI SIGNIFICARA LO MISMO
-     + quicksum(y[j, t] * (Ccar[j] + Cope_j[j] + Cmante[j]) for j in Electrico)
-     + quicksum(w[j, t] * Cprod[j] for j in Electrico)) <= P for t in Anos), name="R2") # R2 Los costos totales no pueden sobrepasar el presupuesto anual. ✅
+model.addConstrs(((quicksum(x[i, t] * (Cben[i] + Cope_i[i] + Cmantb[i]) for i in Bencinero) 
+     + quicksum(y[j, t] * (Ccar + Cope_j + Cmante) for j in Electrico)
+     + quicksum(w[j, t] * Cprod for j in Electrico)) <= I[t] for t in Anos), name="R2") # R2 Los costos totales no pueden sobrepasar el presupuesto anual. ✅
 
 #3)
-#model.addConstrs(((quicksum(w[j,t]*Eprod[j] for j in Electrico) + (quicksum(y[j,t]*Ecar[t]) # revisar ⚠️
- #               for j in Electrico)+(quicksum(x[i,t]*Erb[i]) for i in Bencinero) 
-  #              <= Emax[t]) for t in Anos), name = "R3") #R3 La contaminación anual generada no sobrepasa la máxima permitida ✅
-
-model.addConstrs((quicksum(w[j, t] * Eprod[j] for j in Electrico) +
+model.addConstrs((quicksum(w[j, t] * Eprod for j in Electrico) +
      quicksum(y[j, t] * Ecar[t] for j in Electrico) +
      quicksum(x[i, t] * Erb[i] for i in Bencinero) <= Emax[t]
      for t in Anos), name="R3")  #R3 La contaminación anual generada no sobrepasa la máxima permitida ✅
@@ -104,36 +96,33 @@ model.addConstrs(((y[j,t] == y[j, t-1]+w[j,t]) for j in Electrico for t in range
 model.addConstrs((w[j,t] <= y[j,t]for j in Electrico for t in Anos), name = "R6") # R6 Activación de la variable Wj,t en base a Yj,t ✅
 
 #7)
-#model.addConstrs((((quicksum(w[j,t]) for t in Anos)<=1) for j in Electrico), name = "R7") # R7 Cada bus eléctrico j sólo se puede implementar 1 vez ✅ # revisar ⚠️
-
-model.addConstrs((
-    (quicksum(w[j, t] for t in Anos) <= 1) for j in Electrico),
-    name="R7") # R7 Cada bus eléctrico j sólo se puede implementar 1 vez ✅ # revisar ⚠️
+model.addConstrs(((quicksum(w[j, t] for t in Anos) <= 1) for j in Electrico),
+    name="R7") # R7 Cada bus eléctrico j sólo se puede implementar 1 vez ✅
 
 #8)
 model.addConstrs(((z[i,t]<=x[i,t]) for i in Bencinero for t in Anos), name = "R8") # R8 Activación de la variable Zi,t en base a Xi,t ✅
 
 #9)
-#model.addConstrs((((quicksum(z[i,t]) for t in Anos)<=1) for i in Bencinero), name = "R9") # R9 Cada bus bencinero i solo puede estar en su ultimo periodo de funcionamiento una vez ✅ # revisar ⚠️
-
 model.addConstrs((
     (quicksum(z[i, t] for t in Anos) <= 1) for i in Bencinero),
-    name="R9")  # R9 Cada bus bencinero i solo puede estar en su ultimo periodo de funcionamiento una vez ✅ # revisar ⚠️
+    name="R9")  # R9 Cada bus bencinero i solo puede estar en su ultimo periodo de funcionamiento una vez ✅ 
 
 #10)
-model.addConstrs(((quicksum(y[j,t] for t in Anos))<=(V_j[j] - Vinicio_j[j]) for j in Bencinero), name = "R10") # R10 Funcionamiento en base a la vida  útil de los buses eléctricos ✅
+model.addConstrs(((quicksum(y[j,t] for t in Anos))<=(V_j - Vinicio_j[j]) for j in Bencinero), name = "R10") # R10 Funcionamiento en base a la vida  útil de los buses eléctricos ✅
 
 #11)
-#model.addConstr((a[i] <= V_i[i] - Vinicio_i[i] for i in Bencinero), name= "R11") #R11 Funcionamiento en base a la vida útil de los buses bencineros ✅ ⚠️ NO FUNCIONA
+model.addConstrs((a[i] <= V_i - Vinicio_i[i] for i in Bencinero), name= "R11") #R11 Funcionamiento en base a la vida útil de los buses bencineros ✅
 
-# hacer el setObjective (GRB.MINIMIZE)
+#12)
+model.addConstr((I[1] == P_t[1]), name = "R12") # ✅ 
 
-objetivo = (quicksum(x[i,t] * Ctu_i[i] for i in Bencinero for t in Anos) + quicksum(y[j,t] * Ctu_j[j][t] for j in Electrico for t in Anos) + quicksum(w[j,t] * Ctot[j] for j in Electrico for t in Anos)) # ✅ # revisar ⚠️ NO FUNCIONA
+#13)
+model.addConstrs((I[t] == I[t - 1] + P_t[t] - quicksum(y[j,t] * Cna_j for j in Bencinero) - quicksum(x[i,t] * Cna_i[i] for i in Bencinero) for t in Anos if t >= 2), name = "R13") # ✅ 
 
-#objetivo = (quicksum(quicksum(x[i,t] * Ctu_i[i] for i in Bencinero) for t in Anos) + quicksum(quicksum(y[j,t] * Ctu_j[j][t] for j in Electrico) for t in Anos) + quicksum(quicksum(w[j,t] * Ctot[j] for j in Electrico) for t in Anos)) # ✅ # revisar ⚠️ NO FUNCIONA
+objetivo = (quicksum(x[i,t] * Ctu_i[i] for i in Bencinero for t in Anos) + quicksum(y[j,t] * Ctu_t[t] for j in Electrico for t in Anos) + quicksum(w[j,t] * Ctot for j in Electrico for t in Anos)) # ✅
 
 
-model.setObjective(objetivo, GRB.MNIMIZE) # ✅
+model.setObjective(objetivo, GRB.MINIMIZE) # ✅
 model.optimize() # ✅
 
 
