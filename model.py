@@ -3,9 +3,9 @@ from random import randint
 
 # defininir los conjuntos
 
-Bencinero = range(6150) # I ✅
-Electrico = range(10000) # J ✅
-Anos = range(15) # T ✅
+Bencinero = range(1, 6151) # I ✅
+Electrico = range(1, 10001) # J ✅
+Anos = range(1, 16) # T ✅
 
 # definir los parámetros
 
@@ -16,38 +16,46 @@ transacciones = [352.6, 357.0075, 359.21125, 360.313125, 362.2965,
 362.516875, 365.8225, 370.23, 372.43375, 374.6375, 376.84125, 379.045, 
 380.89615, 381.24875, 395.573125] # ✅
 
+def int_comp(valor, n):
+    nuevo_valor = valor * (1.0416) ** n
+    return nuevo_valor
+
+
+
 
 Cprod = 8282.27 # ✅
 Cope_j = 222.74 # ✅
-Cope_i = {i: 4968.13 if i <= 2150 else 1044.44 for i in Bencinero} # ✅
-Ccar = 222.74 # ✅ 
-Cben = {i: 1183.91 if i <= 2150 else 1043.19 for i in Bencinero} # ✅
+Cope_i = {i: 4968.13 if i <= 2150 else 1044.44 for i in Bencinero} # ✅ 
+Ccar = {t: int_comp(222.74, t) for t in Anos} # ✅ 
+Cben = {(i, t): int_comp(1183.91, t) if i <= 2150 else int_comp(1043.19, t) for i in Bencinero for t in Anos} # ✅
 Cmante = 415.77 # ✅ 
 Cmantb = {i: 2142.7 if i <= 2150 else 376.5 for i in Bencinero} # ✅
-D = {t: transacciones[t] for t in Anos} # ✅
-Emax = {t: randint(1,10) for t in Anos} # ⚠️ pendiente
+D = {t: transacciones[t - 1] * 1000000 for t in Anos} # ✅
+Emax = {t: 10000000 for t in Anos} # ⚠️ pendiente
 Eprod = 42 # ✅ 
-Ecar = {t: emisiones_carga[t] for t in Anos}
+Ecar = {t: emisiones_carga[t - 1] for t in Anos}
 Erb = {i: 131.54 if i <= 2150 else 157 for i in Bencinero} # ✅
 Pme = 81 # ✅ 
 Pmb = {i: 99 if i <= 2150 else 81 for i in Bencinero} # ✅
-P_t = {t: 4000 for t in Anos} # pendiente, revisar la plata por km y pasajero ⚠️
+P_t = {t: 4000000 for t in Anos} # pendiente, revisar la plata por km y pasajero ⚠️
 Pref = 0.823 # ✅
 V_j = 15  # ✅ 
 V_i = 10 # ✅ 
 Vinicio_i = {i: randint(1, 5) if i <= 2150 else randint(4, 8) for i in Bencinero} # ✅
 Vinicio_j = {j: randint(1, 3) if j <= 750 else 0 for j in Electrico} # ✅
-M = 400 # ⚠️ CAMBIAR VALOR
+Pas = 0.017
+Plata_km = 0.014
+M = 40000000000000000000 # ⚠️ CAMBIAR VALOR
 
 # Parametros auxiliares
 CEprod = Eprod * Pref # ✅
 CEcar = {t: Pref * Ecar[t] for t in Anos} # ✅
 CErb = {i: Erb[i] * Pref for i in Bencinero} # ✅
 Ctot = Cprod + CEprod # ✅
-Ctu_t = {t: Ccar + Cope_j + CEcar[t] + Cmante for t in Anos} # ✅
-Ctu_i = {i: Cben[i] + CErb[i] + Cope_i[i] + Cmantb[i] for i in Bencinero} # ✅
-Cna_i = {i: Cope_i[i] + Cben[i] + Cmantb[i] for i in Bencinero} # ✅
-Cna_j = (Cprod + Cope_j + Ccar + Cmante)
+Ctu_t = {t: Ccar[t] + Cope_j + CEcar[t] + Cmante for t in Anos} # ✅
+Ctu_i = {(i,t): Cben[i,t] + CErb[i] + Cope_i[i] + Cmantb[i] for i in Bencinero for t in Anos} # ✅
+Cna_i = {(i,t): Cope_i[i] + Cben[i,t] + Cmantb[i] for i in Bencinero for t in Anos} # ✅
+Cna_j = {t: Cprod + Cope_j + Ccar[t] + Cmante for t in Anos}
 
 # crear el modelo vacío (model = Model())
 
@@ -73,11 +81,11 @@ model.update() # ✅
 
 #1)
 model.addConstrs(((quicksum(x[i,t]*Pmb[i] for i in Bencinero)+ 
-                   (quicksum(y[j,t]*Pme for j in Electrico))<= D[t]*M) for t in Anos) , name = "R1") # R1 demanda anual de pasajeros de buses ✅
+                   (quicksum(y[j,t]*Pme for j in Electrico))>= D[t]) for t in Anos) , name = "R1") # R1 demanda anual de pasajeros de buses ✅
 
 #2)
-model.addConstrs(((quicksum(x[i, t] * (Cben[i] + Cope_i[i] + Cmantb[i]) for i in Bencinero) 
-     + quicksum(y[j, t] * (Ccar + Cope_j + Cmante) for j in Electrico)
+model.addConstrs(((quicksum(x[i, t] * (Cben[i,t] + Cope_i[i] + Cmantb[i]) for i in Bencinero) 
+     + quicksum(y[j, t] * (Ccar[t] + Cope_j + Cmante) for j in Electrico)
      + quicksum(w[j, t] * Cprod for j in Electrico)) <= I[t] for t in Anos), name="R2") # R2 Los costos totales no pueden sobrepasar el presupuesto anual. ✅
 
 #3)
@@ -108,7 +116,7 @@ model.addConstrs((
     name="R9")  # R9 Cada bus bencinero i solo puede estar en su ultimo periodo de funcionamiento una vez ✅ 
 
 #10)
-model.addConstrs(((quicksum(y[j,t] for t in Anos))<=(V_j - Vinicio_j[j]) for j in Bencinero), name = "R10") # R10 Funcionamiento en base a la vida  útil de los buses eléctricos ✅
+model.addConstrs(((quicksum(y[j,t] for t in Anos))<=(V_j - Vinicio_j[j]) for j in Electrico), name = "R10") # R10 Funcionamiento en base a la vida  útil de los buses eléctricos ✅
 
 #11)
 model.addConstrs((a[i] <= V_i - Vinicio_i[i] for i in Bencinero), name= "R11") #R11 Funcionamiento en base a la vida útil de los buses bencineros ✅
@@ -117,9 +125,9 @@ model.addConstrs((a[i] <= V_i - Vinicio_i[i] for i in Bencinero), name= "R11") #
 model.addConstr((I[1] == P_t[1]), name = "R12") # ✅ 
 
 #13)
-model.addConstrs((I[t] == I[t - 1] + P_t[t] - quicksum(y[j,t] * Cna_j for j in Bencinero) - quicksum(x[i,t] * Cna_i[i] for i in Bencinero) for t in Anos if t >= 2), name = "R13") # ✅ 
+model.addConstrs((I[t] == I[t - 1] + P_t[t] - quicksum(y[j,t] * Cna_j[t] for j in Electrico) - quicksum(x[i,t] * Cna_i[i, t] for i in Bencinero) + D[t - 1] * Pas + quicksum(y[j,t] * Plata_km * 90000 for j in Electrico) + quicksum(x[i,t] * Plata_km * 90000 for i in Bencinero) for t in Anos if t >= 2), name = "R13") # ✅ 
 
-objetivo = (quicksum(x[i,t] * Ctu_i[i] for i in Bencinero for t in Anos) + quicksum(y[j,t] * Ctu_t[t] for j in Electrico for t in Anos) + quicksum(w[j,t] * Ctot for j in Electrico for t in Anos)) # ✅
+objetivo = (quicksum(x[i,t] * Ctu_i[i, t] for i in Bencinero for t in Anos) + quicksum(y[j,t] * Ctu_t[t] for j in Electrico for t in Anos) + quicksum(w[j,t] * Ctot for j in Electrico for t in Anos)) # ✅
 
 
 model.setObjective(objetivo, GRB.MINIMIZE) # ✅
@@ -127,5 +135,21 @@ model.optimize() # ✅
 
 
 # printear soluciones
-
-print(model.ObjVal)
+lista_bencineros = []
+lista_electricos = []
+print(f" es xd {model.ObjVal}")
+for ano in Anos:
+    for bencina in Bencinero:
+        if x[bencina, ano].x != 0:
+            lista_bencineros.append(f"{bencina}, {ano}")
+        
+    for electrico in Electrico:
+        if y[electrico, ano].x != 0:
+            lista_electricos.append(f"{electrico}, {ano}")
+    for l in Electrico:
+        if w[electrico, ano].x != 0:
+            print("si ocurrio")
+    
+print(len(lista_bencineros))
+print(len(lista_electricos))
+        
