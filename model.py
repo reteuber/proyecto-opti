@@ -23,20 +23,20 @@ def int_comp(valor, n):
 
 
 
-Cprod = 8282.27 # ✅
-Cope_j = 222.74 # ✅
+Cprod = 8282.27 # ✅ 
+Cope_j = 222.74 # ✅ 
 Cope_i = {i: 4968.13 if i <= 2150 else 1044.44 for i in Bencinero} # ✅ 
 Ccar = {t: int_comp(222.74, t) for t in Anos} # ✅ 
 Cben = {(i, t): int_comp(1183.91, t) if i <= 2150 else int_comp(1043.19, t) for i in Bencinero for t in Anos} # ✅
 Cmante = 415.77 # ✅ 
-Cmantb = {i: 2142.7 if i <= 2150 else 376.5 for i in Bencinero} # ✅
-D = {t: transacciones[t - 1] * 1000000 for t in Anos} # ✅
-Emax = {t: 10000000 for t in Anos} # ⚠️ pendiente
+Cmantb = {i: 2142.7 if i <= 2150 else 376.5 for i in Bencinero} # ✅ 
+D = {t: transacciones[t - 1] * 1000000 / 365 for t in Anos} # ✅ 
+Emax = {t: 100000 for t in Anos} # ⚠️ pendiente
 Eprod = 42 # ✅ 
 Ecar = {t: emisiones_carga[t - 1] for t in Anos}
-Erb = {i: 131.54 if i <= 2150 else 157 for i in Bencinero} # ✅
+Erb = {i: 131.54 if i <= 2150 else 157 for i in Bencinero} # ✅ 
 Pme = 81 # ✅ 
-Pmb = {i: 99 if i <= 2150 else 81 for i in Bencinero} # ✅
+Pmb = {i: 99 if i <= 2150 else 81 for i in Bencinero} # ✅ 
 P_t = {t: 4000000 for t in Anos} # pendiente, revisar la plata por km y pasajero ⚠️
 Pref = 0.823 # ✅
 V_j = 15  # ✅ 
@@ -45,7 +45,7 @@ Vinicio_i = {i: randint(1, 5) if i <= 2150 else randint(4, 8) for i in Bencinero
 Vinicio_j = {j: randint(1, 3) if j <= 750 else 0 for j in Electrico} # ✅
 Pas = 0.017
 Plata_km = 0.014
-M = 40000000000000000000 # ⚠️ CAMBIAR VALOR
+M = 3 # ⚠️ CAMBIAR VALOR
 
 # Parametros auxiliares
 CEprod = Eprod * Pref # ✅
@@ -81,7 +81,7 @@ model.update() # ✅
 
 #1)
 model.addConstrs(((quicksum(x[i,t]*Pmb[i] for i in Bencinero)+ 
-                   (quicksum(y[j,t]*Pme for j in Electrico))>= D[t]) for t in Anos) , name = "R1") # R1 demanda anual de pasajeros de buses ✅
+                   (quicksum(y[j,t]*Pme for j in Electrico)) * M >= D[t]) for t in Anos) , name = "R1") # R1 demanda anual de pasajeros de buses ✅
 
 #2)
 model.addConstrs(((quicksum(x[i, t] * (Cben[i,t] + Cope_i[i] + Cmantb[i]) for i in Bencinero) 
@@ -98,25 +98,25 @@ model.addConstrs((quicksum(w[j, t] * Eprod for j in Electrico) +
 model.addConstrs(((x[i,t] == x[i,t-1]-z[i,t-1]) for i in Bencinero for t in range(2, len(Anos))), name = "R4") # R4 Flujo de cada bus bencinero i en el período t ✅
 
 #5)
-model.addConstrs(((y[j,t] == y[j, t-1]+w[j,t]) for j in Electrico for t in range(2, len(Anos))), name = "R5") #R5 Flujo de cada bus eléctrico j en el período t ✅
+model.addConstrs(((y[j,t] == y[j, t-1] +w[j,t]) for j in Electrico for t in range(2, len(Anos))), name = "R5") #R5 Flujo de cada bus eléctrico j en el período t ✅
 
 #6)
-model.addConstrs((w[j,t] <= y[j,t]for j in Electrico for t in Anos), name = "R6") # R6 Activación de la variable Wj,t en base a Yj,t ✅
+model.addConstrs((w[j,1] == y[j,1]for j in Electrico), name = "R6") # R6 Activación de la variable Wj,t en base a Yj,t ✅
 
 #7)
 model.addConstrs(((quicksum(w[j, t] for t in Anos) <= 1) for j in Electrico),
     name="R7") # R7 Cada bus eléctrico j sólo se puede implementar 1 vez ✅
 
 #8)
-model.addConstrs(((z[i,t]<=x[i,t]) for i in Bencinero for t in Anos), name = "R8") # R8 Activación de la variable Zi,t en base a Xi,t ✅
+#model.addConstrs(((z[i,t] <= x[i,t]) for i in Bencinero for t in Anos), name = "R8") # R8 Activación de la variable Zi,t en base a Xi,t ✅
 
 #9)
 model.addConstrs((
-    (quicksum(z[i, t] for t in Anos) <= 1) for i in Bencinero),
+    (quicksum(z[i, t] for t in Anos) == x[i,1]) for i in Bencinero),
     name="R9")  # R9 Cada bus bencinero i solo puede estar en su ultimo periodo de funcionamiento una vez ✅ 
 
 #10)
-model.addConstrs(((quicksum(y[j,t] for t in Anos))<=(V_j - Vinicio_j[j]) for j in Electrico), name = "R10") # R10 Funcionamiento en base a la vida  útil de los buses eléctricos ✅
+model.addConstrs(((quicksum(y[j,t] for t in Anos)) <= V_j for j in Electrico), name = "R10") # R10 Funcionamiento en base a la vida  útil de los buses eléctricos ✅
 
 #11)
 model.addConstrs((a[i] <= V_i - Vinicio_i[i] for i in Bencinero), name= "R11") #R11 Funcionamiento en base a la vida útil de los buses bencineros ✅
@@ -127,6 +127,9 @@ model.addConstr((I[1] == P_t[1]), name = "R12") # ✅
 #13)
 model.addConstrs((I[t] == I[t - 1] + P_t[t] - quicksum(y[j,t] * Cna_j[t] for j in Electrico) - quicksum(x[i,t] * Cna_i[i, t] for i in Bencinero) + D[t - 1] * Pas + quicksum(y[j,t] * Plata_km * 90000 for j in Electrico) + quicksum(x[i,t] * Plata_km * 90000 for i in Bencinero) for t in Anos if t >= 2), name = "R13") # ✅ 
 
+#14)
+#model.addConstrs((quicksum(x[i,t] for i in Bencinero) >= 150 for t in Anos if t == 1), name = "R14")
+
 objetivo = (quicksum(x[i,t] * Ctu_i[i, t] for i in Bencinero for t in Anos) + quicksum(y[j,t] * Ctu_t[t] for j in Electrico for t in Anos) + quicksum(w[j,t] * Ctot for j in Electrico for t in Anos)) # ✅
 
 
@@ -135,21 +138,28 @@ model.optimize() # ✅
 
 
 # printear soluciones
+# Chamullo
 lista_bencineros = []
 lista_electricos = []
+xr = []
+lista_implementados = []
 print(f" es xd {model.ObjVal}")
 for ano in Anos:
+    agregar_elec = []
+    agregarw = []
     for bencina in Bencinero:
         if x[bencina, ano].x != 0:
-            lista_bencineros.append(f"{bencina}, {ano}")
+            lista_bencineros.append([bencina, ano])
         
     for electrico in Electrico:
         if y[electrico, ano].x != 0:
-            lista_electricos.append(f"{electrico}, {ano}")
+            agregar_elec.append([electrico, ano])
+            xr.append(f"{electrico}, {ano}")
+
+    lista_electricos.append(agregar_elec)
     for l in Electrico:
-        if w[electrico, ano].x != 0:
-            print("si ocurrio")
+        if w[l, ano].x != 0:
+            agregarw.append([l, ano])
+    lista_implementados.append(agregarw)
     
-print(len(lista_bencineros))
-print(len(lista_electricos))
-        
+
