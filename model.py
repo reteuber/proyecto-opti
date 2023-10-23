@@ -46,7 +46,7 @@ Vinicio_i = {i: randint(1, 5) if i <= 2150 else randint(4, 8) for i in Bencinero
 Vinicio_j = 0 # ✅🛫
 Pas = 0.017 * 365
 Plata_km = 0.014
-M = 10 # ⚠️ CAMBIAR VALOR
+M = 7 # ⚠️ CAMBIAR VALOR 7 ES!!
 
 # Parametros auxiliares
 CEprod = Eprod * Pref # ✅
@@ -68,7 +68,7 @@ x = model.addVars(Bencinero, Anos, vtype = GRB.BINARY, name="x_it") # ✅
 y = model.addVars(Electrico, Anos, vtype = GRB.BINARY, name="y_jt") # ✅
 z = model.addVars(Bencinero, Anos, vtype = GRB.BINARY, name="z_it") # ✅
 w = model.addVars(Electrico, Anos, vtype = GRB.BINARY, name="w_jt") # ✅
-I = model.addVars(Anos, vtype = GRB.CONTINUOUS, name = "I_t")
+I = model.addVars(Anos, vtype = GRB.CONTINUOUS, name = "I_t") # ✅
 
 # variables auxiliares
 # sumatoria: quicksum(lo que está adentro de la sumatoria for i in Lo que sea)
@@ -140,6 +140,9 @@ objetivo = (quicksum(x[i,t] * Ctu_i[i, t] for i in Bencinero for t in Anos) + qu
 
 
 model.setObjective(objetivo, GRB.MINIMIZE) # ✅
+
+model.Params.MIPGap = 0.02
+
 model.optimize() # ✅
 
 
