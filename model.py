@@ -1,5 +1,10 @@
 from gurobipy import GRB, Model, quicksum
-from random import randint
+from random import randint, random
+import csv
+import random
+
+# como usamos randint entre 1 y 5, y entre 4 y 8, podríamos poner 4 o 5 nomas
+random.seed(5)
 
 # defininir los conjuntos
 
@@ -19,7 +24,6 @@ transacciones = [352.6, 357.0075, 359.21125, 360.313125, 362.2965,
 def int_comp(valor, n):
     nuevo_valor = valor * (1.0416) ** n
     return nuevo_valor
-
 
 
 Cprod = 8282.27 # ✅ 
@@ -47,6 +51,7 @@ Vinicio_j = 0 # ✅🛫
 Pas = 0.017 * 365
 Plata_km = 0.014
 M = 2 # ⚠️ CAMBIAR VALOR 7 ES!! 
+
 
 # Parametros auxiliares
 CEprod = Eprod * Pref # ✅ 
@@ -80,6 +85,7 @@ model.addConstrs((g[t] == quicksum(y[j,t] * Cna_j[t] for j in Electrico) + quick
 model.update() # ✅
 
 # definir las restricciones
+
 
 #1)
 model.addConstrs((((quicksum(x[i,t]*Pmb[i] for i in Bencinero)+ 
@@ -199,3 +205,30 @@ for ano in Anos:
 # print(lista_electricos[0])
 # print("pov")
 # print(len(lista_implementados))
+
+datos_csv = []
+
+for ano in Anos:
+    bencineros = 0
+    ultimo = 0
+    for bencina in Bencinero:
+        if x[bencina, ano].x == 1:
+            bencineros += 1
+        if z[bencina, ano].x == 1:
+            ultimo += 1
+    electricos = 0
+    producidos = 0
+    for electrico in Electrico:
+        if y[electrico, ano].x == 1:
+            electricos += 1
+        if w[electrico, ano].x == 1:
+            producidos += 1
+
+    datos_csv.append([ano, bencineros, electricos, producidos, ultimo])
+
+with open('datos_tabla.csv', 'w', newline='') as archivo_csv:
+    columnas = ['Año', 'Bencineros', 'Electricos', 'Buses Producidos', 'Bencineros último año']
+    escritor_csv = csv.writer(archivo_csv)
+
+    escritor_csv.writerow(columnas)
+    escritor_csv.writerows(datos_csv)
