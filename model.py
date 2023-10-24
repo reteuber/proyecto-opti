@@ -50,7 +50,7 @@ Vinicio_i = {i: randint(1, 5) if i <= 2150 else randint(4, 8) for i in Bencinero
 Vinicio_j = 0 # ✅🛫
 Pas = 0.017 * 365
 Plata_km = 0.014
-M = 2 # ⚠️ CAMBIAR VALOR 7 ES!! 
+M = 2 # ⚠️ CAMBIAR VALOR 
 
 
 # Parametros auxiliares
@@ -147,7 +147,7 @@ objetivo = (quicksum(x[i,t] * Ctu_i[i, t] for i in Bencinero for t in Anos) + qu
 
 model.setObjective(objetivo, GRB.MINIMIZE) # ✅
 
-model.Params.MIPGap = 0.02
+# model.Params.MIPGap = 0.02
 
 model.optimize() # ✅
 
@@ -223,11 +223,13 @@ for ano in Anos:
             electricos += 1
         if w[electrico, ano].x == 1:
             producidos += 1
+            
+    inventario = I[ano].x
 
-    datos_csv.append([ano, bencineros, electricos, producidos, ultimo])
+    datos_csv.append([ano, bencineros, electricos, producidos, ultimo, inventario])
 
 with open('datos_tabla.csv', 'w', newline='') as archivo_csv:
-    columnas = ['Año', 'Bencineros', 'Electricos', 'Buses Producidos', 'Bencineros último año']
+    columnas = ['Año', 'Bencineros', 'Electricos', 'Buses Producidos', 'Bencineros último año', 'Inventario']
     escritor_csv = csv.writer(archivo_csv)
 
     escritor_csv.writerow(columnas)
