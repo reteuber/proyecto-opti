@@ -44,8 +44,6 @@ CErb = {i: Erb[i] * Pref for i in Bencinero} # ✅
 Ctot = Cprod + CEprod # ✅ 
 Ctu_t = {t: Ccar[t] + Cope_j + CEcar[t] + Cmante for t in Anos} # ✅ 
 Ctu_i = {(i,t): Cben[i,t] + CErb[i] + Cope_i[i] + Cmantb[i] for i in Bencinero for t in Anos} # ✅ 
-Cna_i = {(i,t): Cope_i[i] + Cben[i,t] + Cmantb[i] for i in Bencinero for t in Anos} # ✅ 
-Cna_j = {t: Cope_j + Ccar[t] + Cmante for t in Anos} # ✅ 
 
 # Crear el modelo vacío (model = Model())
 model = Model() # ✅
@@ -61,8 +59,8 @@ I = model.addVars(Anos, vtype = GRB.CONTINUOUS, name = "I_t") # ✅
 a = model.addVars(Bencinero, vtype= GRB.INTEGER, name = "a_i") # ✅
 model.addConstrs((a[i] == quicksum(z[i, t] * t for t in Anos) for i in Bencinero), name="def_a") # ✅
 g = model.addVars(Anos, vtype = GRB.CONTINUOUS, name = "G_t") # ✅ 
-model.addConstrs((g[t] == quicksum(y[j,t] * Cna_j[t] for j in Electrico)
-    + quicksum(x[i,t] * Cna_i[i, t] for i in Bencinero)
+model.addConstrs((g[t] == quicksum(y[j,t] * (Cope_j + Ccar[t] + Cmante) for j in Electrico)
+    + quicksum(x[i,t] * (Cope_i[i] + Cben[i,t] + Cmantb[i]) for i in Bencinero)
     + quicksum(w[j,t] * Cprod for j in Electrico) for t in Anos), name = "def_g") # ✅ 
 
 # Llamar al update (model.update())
@@ -106,12 +104,12 @@ model.addConstrs((a[i] <= V_i - Vinicio_i[i] for i in Bencinero), name= "R10")
 
 #R11) Inventario de dinero en el periodo 1 ✅
 model.addConstr(I[1] == P_t[1] - g[1] + D[1] * Pas + quicksum(y[j,1] * Plata_km * 90000 for j in Electrico)
-    + quicksum(x[i,1] * Plata_km * 90000 for i in Bencinero), name = "R11") 
+    + quicksum(x[i,1] * Plata_km * 90000 * 0.93 for i in Bencinero), name = "R11") 
 
 #R12) Inventario de dinero en el periodo t ∈ {2,...,T} ✅
 model.addConstrs((I[t] == I[t - 1] + P_t[t] - g[t] + D[t] * Pas
-    + quicksum(y[j,t] * Plata_km * 90000 for j in Electrico) 
-    + quicksum(x[i,t] * Plata_km * 90000 for i in Bencinero) for t in Anos if t >= 2), name = "R12")
+    + quicksum(y[j,t] * Plata_km * 90000 * 0.93 for j in Electrico) 
+    + quicksum(x[i,t] * Plata_km * 90000 * 0.93 for i in Bencinero) for t in Anos if t >= 2), name = "R12")
 
 # Definir el objetivo
 objetivo = (quicksum(x[i,t] * Ctu_i[i, t] for i in Bencinero for t in Anos) 
