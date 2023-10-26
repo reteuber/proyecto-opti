@@ -17,7 +17,7 @@ Cprod = parametros["Cprod"] # ✅
 Cope_j = parametros["Cope_j"] # ✅  
 Cope_i = {i: parametros["Cope_i"] for i in Bencinero} # ✅ 
 Ccar = {t: int_comp(parametros["Ccar"], t) for t in Anos} # ✅ 
-Cben = {(i, t): int_comp(parametros["Cben"], t) if i <= 2150 else int_comp(parametros["Cben2"], t) for i in Bencinero for t in Anos} # ✅ 
+Cben = {(i, t): int_comp(parametros["Cben"], t) if i <= 2150 else int_comp(parametros["Cben2"], t) for i in Bencinero for t in Anos} # ✅  
 Cmante = parametros["Cmante"] # ✅ 
 Cmantb = {i: parametros["Cmantb"] if i <= 2150 else parametros["Cmantb2"] for i in Bencinero} # ✅ 
 D = {t: transacciones[t - 1] * 1000000 / 365 for t in Anos} # ✅ 
@@ -33,7 +33,6 @@ Pref = parametros["Pref"] # ✅
 V_j = parametros["V_j"]  # ✅ 
 V_i = parametros["V_i"] # ✅ 
 Vinicio_i = {i: randint(1, 5) if i <= 2150 else randint(4, 8) for i in Bencinero} # ✅ 
-Vinicio_j = parametros["Vinicio_j"] # ✅
 Pas = parametros["Pas"] # ✅
 Plata_km = parametros["Plata_km"] # ✅
 M = parametros["M"] # ✅

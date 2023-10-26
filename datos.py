@@ -13,7 +13,7 @@ parametros = {
     "Cben": 1183.91,
     "Cben2": 1043.19,
     "Cmante": 415.77,
-    "Cmantb": 214.27,
+    "Cmantb": 460.17,
     "Cmantb2": 376.5, 
     "Emax": 2000000, 
     "Eprod": 42, 
@@ -27,9 +27,8 @@ parametros = {
     "Pref": 0.823, 
     "V_j": 15, 
     "V_i": 10,
-    "Vinicio_j": 0, 
     "Pas": 0.017 * 365, 
-    "Plata_km": 0.035, 
+    "Plata_km": 0.025, 
     "M": 1.7
     }
 
