@@ -29,7 +29,7 @@ parametros = {
     "V_i": 10,
     "Vinicio_j": 0, 
     "Pas": 0.017 * 365, 
-    "Plata_km": 0.025, 
+    "Plata_km": 0.035, 
     "M": 1.7
     }
 

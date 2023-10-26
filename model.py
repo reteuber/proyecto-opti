@@ -27,7 +27,8 @@ Ecar = {t: emisiones_carga[t - 1] for t in Anos}
 Erb = {i: parametros["Erb"] if i <= 2150 else parametros["Erb2"] for i in Bencinero} # ✅ 
 Pme = parametros["Pme"] # ✅ 
 Pmb = {i: parametros["Pmb"] if i <= 2150 else parametros["Pmb2"] for i in Bencinero} # ✅ 
-P_t = {t: parametros["P_t"] if t == 1 else parametros["P_t2"] for t in Anos} # ✅
+#P_t = {t: parametros["P_t"] if t == 1 else parametros["P_t2"] for t in Anos} # ✅
+P_t = {t: parametros["P_t2"] for t in Anos} # ✅
 Pref = parametros["Pref"] # ✅
 V_j = parametros["V_j"]  # ✅ 
 V_i = parametros["V_i"] # ✅ 
@@ -130,7 +131,7 @@ lista_bencineros = []
 lista_electricos = []
 xr = []
 lista_implementados = []
-print(f" es xd {model.ObjVal}")
+print(f"El valor optimo es: {model.ObjVal}")
 for ano in Anos:
     agregar_elec = []
     agregarw = []
