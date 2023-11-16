@@ -26,12 +26,12 @@ Ecar = {t: emisiones_carga[t - 1] for t in Anos}
 Erb = {i: parametros["Erb"] if i <= 2150 else parametros["Erb2"] for i in Bencinero} # ✅ 
 Pme = parametros["Pme"] # ✅ 
 Pmb = {i: parametros["Pmb"] if i <= 2150 else parametros["Pmb2"] for i in Bencinero} # ✅ 
-P_t = {t: parametros["P_t"] * 0.8 if t == 1 else parametros["P_t2"] for t in Anos} # ✅
+P_t = {t: parametros["P_t"] if t == 1 else parametros["P_t2"] for t in Anos} # ✅
 Pref = parametros["Pref"] # ✅ 
 Vub = parametros["Vub"] # ✅ 
 Vinicio_i = {i: randint(1, 5) if i <= 2150 else randint(4, 8) for i in Bencinero} # ✅ 
-Ppas = parametros["Ppas"] # ✅
-Plata_km = parametros["Plata_km"] # ✅
+Ppas = parametros["Ppas"] * 1.63 # ✅
+Plata_km = parametros["Plata_km"] * 1.63 # ✅
 O = parametros["O"]
 H = parametros["H"] # ✅
 Km = parametros["Km"]
