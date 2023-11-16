@@ -20,13 +20,13 @@ Ccar = {t: int_comp(parametros["Ccar"], t) for t in Anos} # ✅
 Cben = {(i, t): int_comp(parametros["Cben"], t) if i <= 2150 else int_comp(parametros["Cben2"], t) for i in Bencinero for t in Anos} # ✅  
 Cmante = parametros["Cmante"] # ✅  
 Cmantb = parametros["Cmantb"] # ✅ 
-D = {t: transacciones[t - 1] * 1000000 / 365 for t in Anos} # ✅ 
+D = {t: transacciones[t - 1] * (1000000 / 365) for t in Anos} # ✅ 
 Eprod = parametros["Eprod"] # ✅ 
 Ecar = {t: emisiones_carga[t - 1] for t in Anos}
 Erb = {i: parametros["Erb"] if i <= 2150 else parametros["Erb2"] for i in Bencinero} # ✅ 
 Pme = parametros["Pme"] # ✅ 
 Pmb = {i: parametros["Pmb"] if i <= 2150 else parametros["Pmb2"] for i in Bencinero} # ✅ 
-P_t = {t: parametros["P_t"] if t == 1 else parametros["P_t2"] for t in Anos} # ✅
+P_t = {t: parametros["P_t"] * 0.8 if t == 1 else parametros["P_t2"] for t in Anos} # ✅
 Pref = parametros["Pref"] # ✅ 
 Vub = parametros["Vub"] # ✅ 
 Vinicio_i = {i: randint(1, 5) if i <= 2150 else randint(4, 8) for i in Bencinero} # ✅ 
@@ -159,7 +159,7 @@ for ano in Anos:
 
     datos_csv.append([ano, bencineros, electricos, producidos, ultimo, inventario])
 
-with open('datos_tabla.csv', 'w', newline='') as archivo_csv:
+with open('iteraciones.csv', 'a', newline='') as archivo_csv:
     columnas = ['Año', 'Bencineros', 'Electricos', 'Buses Producidos', 'Bencineros último año', 'Inventario']
     escritor_csv = csv.writer(archivo_csv)
 
